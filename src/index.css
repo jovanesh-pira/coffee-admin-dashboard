@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+/* Optional: Tailwind v4 theme customization (CSS-based config) */
+@theme {
+  /* Custom font family */
+  --font-sans: system-ui, ui-sans-serif, Avenir, Helvetica, Arial, sans-serif;
+  /* Example: extend palette for coffee/admin branding */
+  /* --color-brand-500: #6f4e37;
+  --color-brand-600: #5c4033; */
+}
+
+/* Base styles (optional – Tailwind preflight already resets a lot) */
+@layer base {
+  body {
+    @apply antialiased min-h-screen;
+  }
+}
