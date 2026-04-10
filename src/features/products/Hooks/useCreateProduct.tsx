@@ -1,6 +1,6 @@
 import  { useCallback, useState } from 'react'
 import { createProductService } from '../services/products.service'
-import type { ProductInput } from '../modles/product.schema'
+import type { ProductInput } from '../models/product.schema'
 function useCreateProduct() {
   const [repsonse_product,setResponse]=useState<{id:string,imageUrl:string | null} | null>(null)
   const [loading,setLoading]=useState<boolean>(false)

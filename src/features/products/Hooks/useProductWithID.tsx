@@ -1,6 +1,6 @@
 import  { useState,useCallback } from 'react'
 import {getProductWithID} from "../services/products.service"
-import type { Product } from '../modles/product.schema'
+import type { Product } from '../models/product.schema'
 function useProductWithID() {
   const [product,SetProduct]=useState<Product|null>(null)
    const [loading,setLoading]=useState(false)

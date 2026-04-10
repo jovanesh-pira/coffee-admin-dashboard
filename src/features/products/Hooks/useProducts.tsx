@@ -1,23 +1,27 @@
-import { useState,useCallback } from "react"
+import { useState, useEffect } from "react"
 import { Products_Service } from "../services/products.service"
+import { type Product } from "../models/product.schema"
 
 function useProducts() {
-  const [loading,setLoading]=useState(false)
-  const [error,setError]=useState<string|null>(null)
-  let get_Products=useCallback(async()=>{
+  const [products, setProducts] = useState<Product[]>([])
+  const [loading, setLoading]   = useState(true)
+  const [error, setError]       = useState<string | null>(null)
+  const [tick, setTick]         = useState(0)
+
+  useEffect(() => {
     setLoading(true)
-    setError(null)
-    let response_products=await Products_Service()
-    if(response_products.error){
-        setError(response_products.error)
-        setLoading(false)
-        return
-    }
-    setLoading(false)
-    return response_products.data
-    
-  },[])
-return {get_Products,loading,error}
+    Products_Service()
+      .then(res => {
+        if (res.error) setError(res.error)
+        else setProducts(res.data ?? [])
+      })
+      .catch(e => setError(e.message))
+      .finally(() => setLoading(false))
+  }, [tick])
+
+  const refetch = () => setTick(t => t + 1)
+
+  return { products, loading, error, refetch }
 }
 
 export default useProducts
