@@ -6,7 +6,6 @@ import { doc,setDoc,serverTimestamp } from "firebase/firestore";
 
 
 export function calcPasswordStrength(password: string) {
-  console.log(password)
   let score = 0;
 
   if (!password) return { score: 0, label: "Empty" };

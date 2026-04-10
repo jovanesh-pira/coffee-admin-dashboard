@@ -1,10 +1,11 @@
 import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMemo } from "react";
-import { registerSchema, type RegisterFormValues_input ,type RegisterFormValues} from "../models/Auth.schema";
+import { useMemo, useEffect } from "react";
+import { registerSchema, type RegisterFormValues_input } from "../models/Auth.schema";
 import useRegister from "../hooks/useRegister";
 import { useNavigate } from "react-router-dom";
-import {InputComponent} from "@/shared/ui/Input"; // مسیر خودت
+import { InputComponent } from "@/shared/ui/Input";
+import { useAuth } from "../hooks/useAuth";
 
 function EmailServerHint({ message }: { message: string }) {
   if (!message) return null;
@@ -32,6 +33,14 @@ export function RegisterPage() {
   });
 
   const { register, loading, error } = useRegister();
+  const { user, loading: authLoading } = useAuth();
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      if (user.role === "admin") navigate("/admin", { replace: true })
+      else navigate("/", { replace: true })
+    }
+  }, [user, authLoading])
 
   // اگر error شما string هست، اینجا خیلی ساده تبدیلش می‌کنیم به پیام برای ایمیل
   const emailServerError = useMemo(() => {
@@ -44,8 +53,8 @@ export function RegisterPage() {
   }, [error]);
 
   const RegisterSubmit = async (data: RegisterFormValues_input) => {
-    const user = await register(data.fullName, data.email, data.password);
-    if (user) navigate("/");
+    await register(data.fullName, data.email, data.password);
+    // navigation handled by useEffect above
   };
 
   return (

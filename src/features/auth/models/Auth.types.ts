@@ -7,7 +7,7 @@ export type RoleUser="admin" | "customer" | "guest"
 export type User = {
   uid: string;
   email?: string | null;
-  displayName?: string[] | null;
+  displayName?: string | null;
   photoURL?: string | null;
   role: RoleUser;
 };

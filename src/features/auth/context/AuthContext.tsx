@@ -16,15 +16,17 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const unsubscribe = onAuthStateChanged(auth(), async (firebaseUser) => {
       try{
-         if (!isMounted) return; // avoid setState after unmount
-        setLoading(true)
-        setError(null)
-        console.log(firebaseUser)
-        if(!firebaseUser) return 
-        let ref = doc(db(),"users",firebaseUser.uid)
-        let snap =await getDoc(ref)
-        console.log(snap)
-        if(!snap.exists){
+        if (!isMounted) return;
+        setLoading(true);
+        setError(null);
+        if(!firebaseUser) {
+          setUser(null);
+          setLoading(false);
+          return;
+        }  // its mean there is no user are login or registered ! ?
+        let ref = doc(db(),"users",firebaseUser.uid) // get the username from the firebase storage 
+        let snap =await getDoc(ref) 
+        if(!snap.exists()){
           await setDoc(ref,{
             email: firebaseUser.email ?? null,
             displayName: firebaseUser.displayName ?? null,
