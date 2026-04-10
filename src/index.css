@@ -1,17 +1,42 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
 
 /* Optional: Tailwind v4 theme customization (CSS-based config) */
 @theme {
-  /* Custom font family */
   --font-sans: system-ui, ui-sans-serif, Avenir, Helvetica, Arial, sans-serif;
-  /* Example: extend palette for coffee/admin branding */
-  /* --color-brand-500: #6f4e37;
-  --color-brand-600: #5c4033; */
+  --font-bebas: 'Bebas Neue', sans-serif;
+
+  /* Coffee dark palette */
+  --color-coffee-50:  #f5ecd7;
+  --color-coffee-100: #e8c9a0;
+  --color-coffee-200: #c99060;
+  --color-coffee-300: #a86830;
+  --color-coffee-400: #7a4510;
+  --color-coffee-500: #5c3008;
+  --color-coffee-600: #3d1f04;
+  --color-coffee-700: #2d1600;
+  --color-coffee-800: #1f0e00;
+  --color-coffee-900: #1a0f00;
+  --color-coffee-950: #0d0600;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Base styles (optional – Tailwind preflight already resets a lot) */
 @layer base {
+  html {
+    scroll-behavior: smooth;
+  }
   body {
-    @apply antialiased min-h-screen;
+    @apply antialiased min-h-screen bg-coffee-950 text-coffee-100;
   }
 }

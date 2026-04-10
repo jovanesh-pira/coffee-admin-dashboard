@@ -15,7 +15,7 @@ export const InputComponent=({name,typeInput="text",placeholder="placeholder",la
     const [showPass,setShowPass]=useState(false)
     return (
        <div className="flex flex-col gap-1">
-         {label && <label className="text-sm">{label}</label>}
+         {label && <label className="text-sm text-coffee-200">{label}</label>}
         <Controller 
         name={name}
         control={control}
