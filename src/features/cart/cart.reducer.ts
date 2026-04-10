@@ -74,11 +74,19 @@ export function CartReducer(state:CartState,action:CartAction):CartState{
           .filter(item => item.qty > 0), // qty صفر شد حذف
       };
     }
-       case "TOGGLE_CART":
-        return {...state,
-                isOpen:!state.isOpen
-        }
-   
+    case "REMOVE": {
+      return {
+        ...state,
+        cartlist: state.cartlist.filter(item => item.productId !== action.payload.id),
+      };
+    }
 
-        default: return state
+    case "CLEAR": {
+      return { ...state, cartlist: [] };
+    }
+
+    case "TOGGLE_CART":
+      return { ...state, isOpen: !state.isOpen };
+
+    default: return state;
 }}

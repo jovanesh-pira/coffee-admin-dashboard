@@ -1,19 +1,26 @@
-import  { useMemo, useContext } from "react";
+import { useMemo, useContext, useState } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {runTransaction,doc,serverTimestamp,collection} from "firebase/firestore"
-import { checkoutSchema ,type CheckoutValues,type CustomerData,type Order} from "../cart.types";
+import { runTransaction, doc, serverTimestamp, collection } from "firebase/firestore"
+import { checkoutSchema, type CheckoutValues, type CustomerData } from "../cart.types";
 import { InputComponent } from "@/shared/ui/Input";
 import { CartContext } from "../cart.reducer";
-import {db} from "@/app/firebase/firebase"
-import { useAuth } from "@/features/auth/context/useAuth";
+import { db } from "@/app/firebase/firebase"
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import { formatPrice } from "@/features/products/services/products.service";
+import { useNavigate } from "react-router-dom";
 
+const inputClass = "mt-1 w-full rounded-xl border border-coffee-600 bg-coffee-700 text-white placeholder-coffee-400 px-3 py-2.5 text-sm outline-none focus:border-amber-700 transition"
 
 function CheckoutPage() {
   const ctx = useContext(CartContext);
   const items = ctx?.state.cartlist ?? [];
-  const {user} =useAuth()
-  if(!user) throw new Error("Theres no User")
+  const { user } = useAuth()
+  const navigate = useNavigate()
+  const [submitting, setSubmitting] = useState(false)
+  const [txError, setTxError] = useState<string | null>(null)
+  if (!user) throw new Error("Theres no User")
+
   const subtotal = useMemo(() => {
     return items.reduce((sum, it) => sum + it.unitPrice * it.qty, 0);
   }, [items]);
@@ -31,178 +38,179 @@ function CheckoutPage() {
     mode: "onTouched",
   });
 
-  const CheckOutHandler = async(data: CheckoutValues) => {
-   const customerRef =doc(db(),"Customers",user?.uid)
-   const orderRef = doc(collection(db(), "orders"));
-    
-    await runTransaction(db(),async(trx)=>{
-        for(const item of items){
-            console.log(item)
-            const ref_doc=doc(db(),"Products",item.productId)
-        const snap_product=await trx.get(ref_doc)
-        if(!snap_product.exists())  throw new Error("Product Not Founded with this ID !!")
-        let stock=snap_product.data().stock ?? 0
-         if(stock< item.qty)  throw new Error("Not enough stock");
-         console.log(snap_product.data())
+  const CheckOutHandler = async (data: CheckoutValues) => {
+    setSubmitting(true)
+    setTxError(null)
+    try {
+      const customerRef = doc(db(), "Customers", user?.uid)
+      const orderRef = doc(collection(db(), "orders"));
+
+      await runTransaction(db(), async (trx) => {
+        // ── Phase 1: ALL reads ──────────────────────────────
+        const snaps = await Promise.all(
+          items.map(item => trx.get(doc(db(), "Products", item.productId)))
+        )
+
+        // ── Phase 2: validate stock ─────────────────────────
+        for (let i = 0; i < items.length; i++) {
+          if (!snaps[i].exists()) throw new Error(`Product not found: ${items[i].name}`)
+          const stock = snaps[i].data()!.stock ?? 0
+          if (stock < items[i].qty) throw new Error(`Not enough stock for "${items[i].name}"`)
         }
-        for (const item of items) {
-    const productRef = doc(db(), "Products", item.productId);
-    const snap = await trx.get(productRef);
-    if(!snap.exists())  throw new Error("Product Not Founded with this ID !!")
-    const stock = snap.data().stock ?? 0;
 
-    trx.update(productRef, { stock: stock - item.qty });
-    console.log("updating of the Stock is Done !")
-  }
+        // ── Phase 3: ALL writes ─────────────────────────────
+        for (let i = 0; i < items.length; i++) {
+          const stock = snaps[i].data()!.stock ?? 0
+          trx.update(snaps[i].ref, { stock: stock - items[i].qty })
+        }
+        const customerData: CustomerData = { fullName: data.fullName, city: data.city, phone: data.phone, street: data.street }
+        const orderData = { customerId: user.uid, items, total: subtotal, status: "pending", createdAt: serverTimestamp() }
+        trx.set(customerRef, { ...customerData, updatedAt: serverTimestamp() }, { merge: true })
+        trx.set(orderRef, { ...orderData, createdAt: serverTimestamp() })
+      })
 
-  
-let customerData:CustomerData = {fullName:data.fullName,city:data.city,phone:data.phone,street:data.street}
-let orderData = {
-  customerId:user.uid,
-  items:items,       
-  total:subtotal,
-  status: "pending",
-  createdAt: serverTimestamp(),}
-trx.set(customerRef, { ...customerData, updatedAt: serverTimestamp() }, { merge: true });
-console.log("Customer is created !!")
-trx.set(orderRef, { ...orderData, createdAt: serverTimestamp() });
-    })
-    console.log("checkout data:", data);
-    console.log("cart items:", items);
-    console.log("subtotal:", subtotal);
+      ctx?.dispatch({ type: "CLEAR" })
+      navigate("/")
+    } catch (e: any) {
+      setTxError(e.message ?? "Something went wrong. Please try again.")
+    } finally {
+      setSubmitting(false)
+    }
   };
 
   return (
-    <div className="min-h-[70vh] bg-neutral-50">
-      <div className="mx-auto max-w-5xl p-4 md:p-8 grid grid-cols-1 md:grid-cols-5 gap-6">
-        {/* Form */}
-        <div className="md:col-span-3 bg-white rounded-2xl border border-neutral-200 p-5">
-          <h1 className="text-xl font-semibold text-neutral-900">Checkout</h1>
-          <p className="mt-1 text-sm text-neutral-500">
-            Enter your contact and delivery address.
-          </p>
+    <div className="min-h-screen py-10 px-4">
+      <div className="mx-auto max-w-5xl">
 
-          <FormProvider {...methods}>
-            <form
-              onSubmit={methods.handleSubmit(CheckOutHandler)}
-              className="mt-5 space-y-4"
-            >
-              <InputComponent
-                name="fullName"
-                placeholder="Dimash Qudaibergen"
-                typeInput="text"
-                label="Full name"
-                extraClass="mt-1 w-full rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-neutral-900"
-              />
-
-              <InputComponent
-                name="phone"
-                placeholder="+7 777 123 45 67"
-                typeInput="text"
-                label="Phone"
-                extraClass="mt-1 w-full rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-neutral-900"
-              />
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <InputComponent
-                  name="city"
-                  placeholder="Almaty"
-                  typeInput="text"
-                  label="City"
-                  extraClass="mt-1 w-full rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-neutral-900"
-                />
-
-                <InputComponent
-                  name="street"
-                  placeholder="Abylai Khan 10"
-                  typeInput="text"
-                  label="Street"
-                  extraClass="mt-1 w-full rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-neutral-900"
-                />
-              </div>
-
-              <InputComponent
-                name="details"
-                placeholder="Apartment / floor / code (optional)"
-                typeInput="text"
-                label="Details"
-                extraClass="mt-1 w-full rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-neutral-900"
-              />
-
-             
-              <div>
-                <label className="text-sm text-neutral-700">Note</label>
-                <textarea
-                  className="mt-1 w-full rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-neutral-900 min-h-[90px]"
-                  {...methods.register("note")}
-                  placeholder="Optional note for delivery..."
-                />
-                {methods.formState.errors.note?.message && (
-                  <p className="mt-1 text-xs text-red-600">
-                    {methods.formState.errors.note.message as string}
-                  </p>
-                )}
-              </div>
-
-              <button
-                type="submit"
-                disabled={items.length === 0} 
-                className={[
-                  "w-full rounded-xl px-4 py-3 text-sm font-semibold transition",
-                  items.length === 0
-                    ? "bg-neutral-200 text-neutral-500 cursor-not-allowed"
-                    : "bg-neutral-900 text-white hover:bg-neutral-800",
-                ].join(" ")}
-              >
-                Place Order
-              </button>
-            </form>
-          </FormProvider>
+        {/* Page title */}
+        <div className="mb-8">
+          <span className="text-xs tracking-[0.3em] uppercase text-amber-700 font-medium">Almost there</span>
+          <h1 className="font-bebas text-4xl md:text-5xl text-white tracking-wide mt-1">Checkout</h1>
         </div>
 
-        {/* Summary */}
-        <div className="md:col-span-2 bg-white rounded-2xl border border-neutral-200 p-5 h-fit">
-          <h2 className="text-base font-semibold text-neutral-900">
-            Order summary
-          </h2>
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
 
-          <div className="mt-4 space-y-3">
-            {items.length === 0 ? (
-              <p className="text-sm text-neutral-500">Cart is empty</p>
-            ) : (
-              items.map((it) => (
-                <div key={it.productId} className="flex items-center gap-3">
-                  <div className="h-12 w-12 rounded-xl overflow-hidden bg-neutral-100">
-                    <img
-                      src={it.image}
-                      alt={it.name}
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-neutral-900">
-                      {it.name}
-                    </p>
-                    <p className="text-xs text-neutral-500">
-                      {it.qty} × ${it.unitPrice.toFixed(2)}
-                    </p>
-                  </div>
-                  <p className="text-sm font-semibold text-neutral-900">
-                    ${(it.qty * it.unitPrice).toFixed(2)}
-                  </p>
+          {/* ── Form ── */}
+          <div className="md:col-span-3 bg-coffee-800 border border-coffee-700 rounded-2xl p-6">
+            <h2 className="font-bebas text-xl tracking-wide text-white mb-1">Delivery Info</h2>
+            <p className="text-xs text-coffee-300 mb-6">Enter your contact and delivery address.</p>
+
+            <FormProvider {...methods}>
+              <form onSubmit={methods.handleSubmit(CheckOutHandler)} className="space-y-4">
+
+                <InputComponent
+                  name="fullName"
+                  placeholder="Dimash Qudaibergen"
+                  typeInput="text"
+                  label="Full Name"
+                  extraClass={inputClass}
+                />
+
+                <InputComponent
+                  name="phone"
+                  placeholder="+7 777 123 45 67"
+                  typeInput="text"
+                  label="Phone"
+                  extraClass={inputClass}
+                />
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <InputComponent
+                    name="city"
+                    placeholder="Almaty"
+                    typeInput="text"
+                    label="City"
+                    extraClass={inputClass}
+                  />
+                  <InputComponent
+                    name="street"
+                    placeholder="Abylai Khan 10"
+                    typeInput="text"
+                    label="Street"
+                    extraClass={inputClass}
+                  />
                 </div>
-              ))
+
+                <InputComponent
+                  name="details"
+                  placeholder="Apartment / floor / code (optional)"
+                  typeInput="text"
+                  label="Details"
+                  extraClass={inputClass}
+                />
+
+                <div>
+                  <label className="text-sm text-coffee-200">Note</label>
+                  <textarea
+                    {...methods.register("note")}
+                    placeholder="Optional note for delivery..."
+                    className={`${inputClass} min-h-24 resize-none`}
+                  />
+                  {methods.formState.errors.note?.message && (
+                    <p className="mt-1 text-xs text-red-400">
+                      {methods.formState.errors.note.message as string}
+                    </p>
+                  )}
+                </div>
+
+                {txError && (
+                  <p className="text-sm text-red-400 bg-red-900/20 border border-red-800 rounded-xl px-4 py-3">
+                    {txError}
+                  </p>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={items.length === 0 || submitting}
+                  className={[
+                    "w-full rounded-full py-3 text-sm font-semibold tracking-wide transition",
+                    items.length === 0 || submitting
+                      ? "bg-coffee-700 text-coffee-500 cursor-not-allowed"
+                      : "bg-amber-800 text-white hover:bg-amber-700",
+                  ].join(" ")}
+                >
+                  {submitting ? "Placing Order..." : "Place Order →"}
+                </button>
+
+              </form>
+            </FormProvider>
+          </div>
+
+          {/* ── Order Summary ── */}
+          <div className="md:col-span-2 h-fit bg-coffee-800 border border-coffee-700 rounded-2xl p-6">
+            <h2 className="font-bebas text-xl tracking-wide text-white mb-4">Order Summary</h2>
+
+            <div className="space-y-3">
+              {items.length === 0 ? (
+                <p className="text-sm text-coffee-400">Your cart is empty.</p>
+              ) : (
+                items.map((it) => (
+                  <div key={it.productId} className="flex items-center gap-3">
+                    <div className="h-12 w-12 rounded-xl overflow-hidden bg-coffee-700 shrink-0">
+                      <img src={it.image} alt={it.name} className="h-full w-full object-cover" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-white">{it.name}</p>
+                      <p className="text-xs text-coffee-400">{it.qty} × {formatPrice(it.unitPrice)}</p>
+                    </div>
+                    <p className="text-sm font-semibold text-amber-400 shrink-0">
+                      {formatPrice(it.qty * it.unitPrice)}
+                    </p>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {items.length > 0 && (
+              <div className="mt-5 pt-4 border-t border-coffee-700 flex justify-between items-center">
+                <span className="text-sm text-coffee-300">Total</span>
+                <span className="font-bebas text-2xl text-amber-400 tracking-wide">
+                  {formatPrice(subtotal)}
+                </span>
+              </div>
             )}
           </div>
 
-          <div className="mt-5 border-t border-neutral-200 pt-4">
-            <div className="flex justify-between text-sm text-neutral-700">
-              <span>Total</span>
-              <span className="font-semibold text-neutral-900">
-                ${subtotal.toFixed(2)}
-              </span>
-            </div>
-          </div>
         </div>
       </div>
     </div>
