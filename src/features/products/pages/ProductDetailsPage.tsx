@@ -1,6 +1,6 @@
 import { useEffect} from "react";
 import { useParams } from "react-router-dom";
-import useProductWithID from "../Hooks/useProductWithID";
+import useProductWithID from "../hooks/useProductWithID";
 import {Link} from "react-router-dom"
 import {calcDiscounted} from "../services/products.service"
 import {formatPrice} from "../services/products.service"

@@ -1,14 +1,14 @@
-import {calcDiscounted,formatPrice} from "../services/products.service"
-import { type Product } from "../modles/product.schema";
-import {Link} from "react-router-dom"
+import { calcDiscounted, formatPrice } from "../services/products.service"
+import { type Product } from "../models/product.schema";
+import { Link } from "react-router-dom"
 import { useContext } from "react";
 import { CartContext } from "@/features/cart/cart.reducer";
-
 
 export function ProductCard({ product }: { product: Product }) {
   const { d, discounted } = calcDiscounted(product.price, product.discountPercent);
   const hasDiscount = d > 0;
-  let ctx =useContext(CartContext)
+  const ctx = useContext(CartContext);
+
   const available =
     typeof product.isAvailable === "boolean"
       ? product.isAvailable
@@ -17,101 +17,99 @@ export function ProductCard({ product }: { product: Product }) {
       : true;
 
   return (
-    <article className="group">
-     <Link to={`/product/${product.id}`}>
-      <div className="relative overflow-hidden rounded-none bg-neutral-100">
-        {/* Badges */}
-        <div className="absolute left-4 top-4 z-10 flex gap-2">
-          {product.featured && (
-            <span className="border border-neutral-300 bg-white/80 px-2 py-1 text-[11px] uppercase tracking-widest text-neutral-800 backdrop-blur">
-              Featured
-            </span>
-          )}
-        </div>
+    <article className="group flex flex-col bg-coffee-800 border border-coffee-700 rounded-2xl overflow-hidden hover:border-amber-700/50 transition-all duration-300">
 
-        {hasDiscount && (
-          <div className="absolute right-4 top-4 z-10">
-            <span className="bg-neutral-900 px-2 py-1 text-[11px] font-medium tracking-wide text-white">
-              -{d}% OFF
-            </span>
-          </div>
-        )}
-
-        <div className="">
+      {/* Image */}
+      <Link to={`/product/${product.id}`} className="relative overflow-hidden">
+        <div className="relative h-56 bg-coffee-700 overflow-hidden">
           <img
             src={product?.imageUrl}
             alt={product.name}
-            className="mx-auto h-80 w-full max-w-full object-cover object-center transition-transform duration-300 group-hover:scale-[1.08]"
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             loading="lazy"
           />
+
+          {/* Badges */}
+          <div className="absolute top-3 left-3 flex flex-col gap-1.5">
+            {product.featured && (
+              <span className="text-[10px] font-semibold uppercase tracking-widest px-2 py-1 bg-amber-700 text-white rounded-sm">
+                Featured
+              </span>
+            )}
+            {!available && (
+              <span className="text-[10px] font-semibold uppercase tracking-widest px-2 py-1 bg-coffee-900/80 text-coffee-300 rounded-sm">
+                Sold Out
+              </span>
+            )}
+          </div>
+
+          {hasDiscount && (
+            <span className="absolute top-3 right-3 text-[10px] font-bold px-2 py-1 bg-red-600 text-white rounded-sm">
+              -{d}% OFF
+            </span>
+          )}
         </div>
-      </div>
+      </Link>
 
-      {/* Text area */}
-      <div className="pt-8 text-center">
-        <h3 className="font-serif text-2xl tracking-tight text-neutral-900">
-          {product.name}
-        </h3>
+      {/* Info */}
+      <div className="flex flex-col flex-1 p-4 gap-3">
 
-        <div className="mt-4 flex items-center justify-center gap-3 text-neutral-800">
+        {/* Category */}
+        {product.category && (
+          <span className="text-[10px] tracking-[0.2em] uppercase text-amber-600 font-medium">
+            {product.category}
+          </span>
+        )}
+
+        {/* Name */}
+        <Link to={`/product/${product.id}`}>
+          <h3 className="font-bebas text-xl tracking-wide text-white leading-tight group-hover:text-amber-400 transition-colors">
+            {product.name}
+          </h3>
+        </Link>
+
+        {/* Price */}
+        <div className="flex items-center gap-2 mt-auto">
           {hasDiscount ? (
             <>
-              <span className="text-lg">{formatPrice(discounted)}</span>
-              <span className="text-sm text-neutral-500 line-through">
-                {formatPrice(product.price)}
-              </span>
+              <span className="text-amber-400 font-semibold">{formatPrice(discounted)}</span>
+              <span className="text-coffee-400 text-xs line-through">{formatPrice(product.price)}</span>
             </>
           ) : (
-            <span className="text-lg">{formatPrice(product.price)}</span>
+            <span className="text-amber-400 font-semibold">{formatPrice(product.price)}</span>
           )}
         </div>
 
-        {/* Optional meta row */}
-        <div className="mt-4 flex items-center justify-center gap-3 text-xs text-neutral-600">
-          <span className="flex items-center gap-2">
-            <span
-              className={[
-                "h-2 w-2 rounded-full",
-                available ? "bg-emerald-500" : "bg-red-500",
-              ].join(" ")}
-            />
-            {available ? "Available" : "Unavailable"}
-          </span>
+        {/* Add to cart */}
+        <button
+          type="button"
+          disabled={!available}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            ctx?.dispatch({
+              type: "ADD",
+              payload: {
+                productId: product.id,
+                name: product.name,
+                image: product.imageUrl,
+                unitPrice: product.price,
+                qty: 1,
+                stock: product.stock,
+              },
+            });
+          }}
+          className={[
+            "w-full py-2.5 rounded-full text-sm font-semibold tracking-wide transition",
+            available
+              ? "bg-amber-800 text-white hover:bg-amber-700"
+              : "bg-coffee-700 text-coffee-500 cursor-not-allowed",
+          ].join(" ")}
+        >
+          {available ? "Add to Cart" : "Sold Out"}
+        </button>
 
-          {product.category ? (
-            <>
-              <span className="text-neutral-300">•</span>
-              <span className="uppercase tracking-widest">{product.category}</span>
-            </>
-          ) : null}
-        </div>
-
-        
-        <div className="mt-6 flex justify-center">
-          <button
-            type="button"
-            disabled={!available}
-            onClick={(e)=>{
-              e.preventDefault(); 
-              e.stopPropagation();
-              ctx?.dispatch({type:"ADD" ,payload:{productId:product.id,
-                                                             name: product.name,
-                                                             image:product.imageUrl,
-                                                             unitPrice:product.price,
-                                                             qty:1,stock:product.stock}})}}
-            className={[
-              "w-55 rounded-none border px-5 py-3 text-sm tracking-wide transition",
-              available
-                ? "border-neutral-900 bg-neutral-900 text-white hover:bg-neutral-800"
-                : "cursor-not-allowed border-neutral-300 bg-neutral-200 text-neutral-500",
-            ].join(" ")}
-          >
-            Add to Cart
-          </button>
-
-        </div>
       </div>
-      </Link>
     </article>
   );
 }

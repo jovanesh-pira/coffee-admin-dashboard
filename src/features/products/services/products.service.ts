@@ -1,9 +1,9 @@
 import {db,storage} from "@/app/firebase/firebase"
-import {addDoc, collection,  getDoc,  getDocs,doc} from "firebase/firestore"
-import {ref,uploadBytes,getDownloadURL} from "firebase/storage"
-import type{Product, ProductInput} from "../modles/product.schema"
-import {productWithIdSchema,productSchema} from "../modles/product.schema"
-import { useMemo } from "react"
+import {addDoc, collection, getDoc, getDocs, doc, deleteDoc, updateDoc} from "firebase/firestore"
+import {ref,uploadBytes,getDownloadURL,deleteObject} from "firebase/storage"
+import type{Product, ProductInput} from "../models/product.schema"
+import {productWithIdSchema} from "../models/product.schema"
+
 
 export async function Products_Service(){
     try{
@@ -60,7 +60,7 @@ export async function getProductWithID(id:string):Promise<{response:Product|null
     try{
        let ref=doc(db(),"Products",id)
        let snap_product=await getDoc(ref)
-       if(!snap_product.exists) return {response:null , error:`Product Not Founded with this ID : ${id}`}
+       if(!snap_product.exists()) return {response:null , error:`Product Not Founded with this ID : ${id}`}
        let data = productWithIdSchema.parse({id:snap_product.id,...snap_product.data()})
        return {response:data,error:null}
     }catch(err:unknown){
@@ -71,6 +71,28 @@ export async function getProductWithID(id:string):Promise<{response:Product|null
 }
 
 
+
+export async function deleteProductService(id: string, imageUrl?: string | null) {
+  try {
+    if (imageUrl) {
+      const imageRef = ref(storage(), imageUrl)
+      await deleteObject(imageRef).catch(() => {}) // ignore if already deleted
+    }
+    await deleteDoc(doc(db(), "Products", id))
+    return { error: null }
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Failed to delete" }
+  }
+}
+
+export async function toggleAvailabilityService(id: string, isAvailable: boolean) {
+  try {
+    await updateDoc(doc(db(), "Products", id), { isAvailable })
+    return { error: null }
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Failed to update" }
+  }
+}
 
 export function calcDiscounted(price: number, discountPercent?: number) {
   const d = Math.max(0, Math.min(100, discountPercent ?? 0));
@@ -86,3 +108,14 @@ export function formatPrice(n: number) {
     maximumFractionDigits: 0,
   }).format(n);
 }
+
+
+
+
+
+
+
+
+
+
+
