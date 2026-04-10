@@ -1,5 +1,5 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
-import { useAuth } from "@/features/auth/context/useAuth";
+import { useAuth } from "@/features/auth/hooks/useAuth";
 import type { ProtectedRouteProps } from "@/features/auth/models/Auth.types";
 
 export default function ProtectedRoute({
@@ -24,8 +24,8 @@ export default function ProtectedRoute({
   }
 
   if (requiredRole) {
-    
-    if (!user.role) return laodingEffect ?? <div>Loading...</div>;
+    // it can take the time to get and the read userRole from firestore
+    if (!user.role) return laodingEffect ?? <div>Loading...</div>; 
 
     const allowed = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
     if (!allowed.includes(user.role)) {
