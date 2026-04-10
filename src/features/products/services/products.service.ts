@@ -76,7 +76,7 @@ export async function deleteProductService(id: string, imageUrl?: string | null)
   try {
     if (imageUrl) {
       const imageRef = ref(storage(), imageUrl)
-      await deleteObject(imageRef).catch(() => {}) // ignore if already deleted
+      await deleteObject(imageRef).catch(() => {}) // ignore if already deleted wtf ???
     }
     await deleteDoc(doc(db(), "Products", id))
     return { error: null }

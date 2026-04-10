@@ -13,8 +13,8 @@ type ConfirmTarget = { id: string; name: string; imageUrl?: string | null }
 
 export function AdminProducts() {
   const { products, loading, error, refetch } = useProducts()
-  const [deleting, setDeleting]         = useState<string | null>(null)
-  const [toggling, setToggling]         = useState<string | null>(null)
+  const [deleting, setDeleting]= useState<string | null>(null)
+  const [toggling, setToggling]= useState<string | null>(null)
   const [confirmTarget, setConfirmTarget] = useState<ConfirmTarget | null>(null)
 
   async function handleDelete() {
