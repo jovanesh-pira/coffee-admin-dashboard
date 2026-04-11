@@ -94,6 +94,23 @@ export async function toggleAvailabilityService(id: string, isAvailable: boolean
   }
 }
 
+export async function updateProductService(id: string, data: ProductInput, existingImageUrl?: string | null) {
+  try {
+    let imageUrl: string | null = existingImageUrl ?? null
+    if (data.image) {
+      const fileName = `${Date.now()}-${data.image.name}`
+      const storageRef = ref(storage(), `products/${fileName}`)
+      await uploadBytes(storageRef, data.image)
+      imageUrl = await getDownloadURL(storageRef)
+    }
+    const { image, ...fields } = data
+    await updateDoc(doc(db(), "Products", id), { ...fields, imageUrl })
+    return { error: null }
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Failed to update" }
+  }
+}
+
 export function calcDiscounted(price: number, discountPercent?: number) {
   const d = Math.max(0, Math.min(100, discountPercent ?? 0));
   const discounted = price * (1 - d / 100);

@@ -137,9 +137,9 @@ export function AdminProducts() {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <Link
-                          to={`/product/${product.id}`}
+                          to={`/admin/products/edit/${product.id}`}
                           className="h-8 w-8 rounded-lg border border-[#E7DFD4] bg-white grid place-items-center text-[#6E655E] hover:bg-[#F7F3EC] transition"
-                          title="View"
+                          title="Edit"
                         >
                           <FiEdit2 size={13} />
                         </Link>
