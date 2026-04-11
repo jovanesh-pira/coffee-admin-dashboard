@@ -1,7 +1,8 @@
 import { MdDashboard } from "react-icons/md";
 import { CiShoppingBasket, CiBoxes } from "react-icons/ci";
 import { TbUsers, TbReportSearch } from "react-icons/tb";
-import { NavLink } from 'react-router-dom';
+import { FiArrowLeft } from "react-icons/fi";
+import { NavLink, Link } from 'react-router-dom';
 import { type NavItem } from "../models/admin.type";
 import { useNewOrdersCount } from "../hooks/useNewOrdersCount";
 
@@ -79,6 +80,17 @@ function SideBarComponent({ isOpen }: SideBarProps) {
             </NavLink>
           ))}
         </nav>
+      </div>
+
+      {/* Back to Store */}
+      <div className="mt-auto pt-6 min-w-max border-t border-[#E7DFD4]">
+        <Link
+          to="/products"
+          className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-[#6E655E] hover:bg-white/60 transition"
+        >
+          <FiArrowLeft size={16} />
+          Back to Store
+        </Link>
       </div>
     </aside>
   );

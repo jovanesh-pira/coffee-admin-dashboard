@@ -17,11 +17,11 @@ export function ProductCard({ product }: { product: Product }) {
       : true;
 
   return (
-    <article className="group flex flex-col bg-coffee-800 border border-coffee-700 rounded-2xl overflow-hidden hover:border-amber-700/50 transition-all duration-300">
+    <article className="flex flex-col bg-white border border-[#E7DFD4] rounded-2xl overflow-hidden hover:border-[#A37A5B] transition-all duration-300">
 
       {/* Image */}
-      <Link to={`/product/${product.id}`} className="relative overflow-hidden">
-        <div className="relative h-56 bg-coffee-700 overflow-hidden">
+      <Link to={`/product/${product.id}`} className="relative overflow-hidden bg-[#F7F3EC]">
+        <div className="relative h-56 overflow-hidden">
           <img
             src={product?.imageUrl}
             alt={product.name}
@@ -32,19 +32,19 @@ export function ProductCard({ product }: { product: Product }) {
           {/* Badges */}
           <div className="absolute top-3 left-3 flex flex-col gap-1.5">
             {product.featured && (
-              <span className="text-[10px] font-semibold uppercase tracking-widest px-2 py-1 bg-amber-700 text-white rounded-sm">
+              <span className="text-[10px] font-semibold uppercase tracking-widest px-2 py-1 bg-[#A37A5B] text-white rounded-full">
                 Featured
               </span>
             )}
             {!available && (
-              <span className="text-[10px] font-semibold uppercase tracking-widest px-2 py-1 bg-coffee-900/80 text-coffee-300 rounded-sm">
+              <span className="text-[10px] font-semibold uppercase tracking-widest px-2 py-1 bg-[#E7DFD4] text-[#9A948D] rounded-full">
                 Sold Out
               </span>
             )}
           </div>
 
           {hasDiscount && (
-            <span className="absolute top-3 right-3 text-[10px] font-bold px-2 py-1 bg-red-600 text-white rounded-sm">
+            <span className="absolute top-3 right-3 text-[10px] font-bold px-2 py-1 bg-[#A37A5B] text-white rounded-full">
               -{d}% OFF
             </span>
           )}
@@ -56,14 +56,14 @@ export function ProductCard({ product }: { product: Product }) {
 
         {/* Category */}
         {product.category && (
-          <span className="text-[10px] tracking-[0.2em] uppercase text-amber-600 font-medium">
+          <span className="text-[10px] tracking-widest uppercase text-[#A37A5B] font-medium">
             {product.category}
           </span>
         )}
 
         {/* Name */}
         <Link to={`/product/${product.id}`}>
-          <h3 className="font-bebas text-xl tracking-wide text-white leading-tight group-hover:text-amber-400 transition-colors">
+          <h3 className="font-bebas text-xl tracking-wide text-[#2B2B2B] leading-tight hover:text-[#A37A5B] transition-colors">
             {product.name}
           </h3>
         </Link>
@@ -72,15 +72,15 @@ export function ProductCard({ product }: { product: Product }) {
         <div className="flex items-center gap-2 mt-auto">
           {hasDiscount ? (
             <>
-              <span className="text-amber-400 font-semibold">{formatPrice(discounted)}</span>
-              <span className="text-coffee-400 text-xs line-through">{formatPrice(product.price)}</span>
+              <span className="text-[#2B2B2B] font-semibold">{formatPrice(discounted)}</span>
+              <span className="text-[#9A948D] text-xs line-through">{formatPrice(product.price)}</span>
             </>
           ) : (
-            <span className="text-amber-400 font-semibold">{formatPrice(product.price)}</span>
+            <span className="text-[#2B2B2B] font-semibold">{formatPrice(product.price)}</span>
           )}
         </div>
 
-        {/* Add to cart */}
+        {/* Add to Cart */}
         <button
           type="button"
           disabled={!available}
@@ -102,8 +102,8 @@ export function ProductCard({ product }: { product: Product }) {
           className={[
             "w-full py-2.5 rounded-full text-sm font-semibold tracking-wide transition",
             available
-              ? "bg-amber-800 text-white hover:bg-amber-700"
-              : "bg-coffee-700 text-coffee-500 cursor-not-allowed",
+              ? "bg-[#A37A5B] text-white hover:bg-[#8a6449]"
+              : "bg-[#F7F3EC] text-[#C4B8AD] cursor-not-allowed",
           ].join(" ")}
         >
           {available ? "Add to Cart" : "Sold Out"}

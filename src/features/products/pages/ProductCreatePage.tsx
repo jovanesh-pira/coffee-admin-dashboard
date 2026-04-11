@@ -5,7 +5,6 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { productSchema, type ProductInput } from "../models/product.schema"
 import { InputComponent } from "@/shared/ui/Input"
 import { FiArrowLeft } from "react-icons/fi"
-import { useState } from "react"
 const inputClass = "mt-1 w-full rounded-xl border border-[#E7DFD4] bg-white px-3 py-2.5 text-sm text-[#2B2B2B] placeholder-[#C4B8AD] outline-none focus:border-[#A37A5B] transition"
 
 function ProductCreatePage() {
@@ -38,12 +37,12 @@ function ProductCreatePage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 max-w-3xl">
+    <div className="flex flex-col gap-6 max-w-4xl mx-auto w-full">
 
       {/* Back */}
       <button
         onClick={() => navigate("/admin/products")}
-        className="flex items-center gap-2 text-sm text-[#9A948D] hover:text-[#2B2B2B] transition w-fit"
+        className="flex items-center gap-2 px-4 py-2 rounded-full border border-[#E7DFD4] bg-white text-sm text-[#2B2B2B] font-medium hover:bg-[#F7F3EC] transition w-fit"
       >
         <FiArrowLeft size={15} />
         Back to Products

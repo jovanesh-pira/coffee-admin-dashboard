@@ -1,4 +1,4 @@
-// reducer and Context
+
 
 import { createContext } from "react";
 export type CartContextValue = {
@@ -90,3 +90,9 @@ export function CartReducer(state:CartState,action:CartAction):CartState{
 
     default: return state;
 }}
+
+
+
+
+
+

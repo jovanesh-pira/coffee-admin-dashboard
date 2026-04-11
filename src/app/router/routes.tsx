@@ -17,6 +17,7 @@ import { AdminProducts } from "@/features/admin/pages/AdminProducts";
 import { AdminOrders } from "@/features/admin/pages/AdminOrders";
 import { NotFoundPage } from "@/app/pages/NotFoundPage";
 import ProductCreatePage from "@/features/products/pages/ProductCreatePage"
+import ProductEditPage from "@/features/products/pages/ProductEditPage"
 import CheckoutPage from "@/features/cart/pages/CheckoutPage"
 import AdminCustomer from "@/features/admin/pages/AdminCustomer";
 import AdminReports from "@/features/admin/pages/AdminReports";
@@ -71,6 +72,7 @@ export const routes = createBrowserRouter([
           { path: "customer", element: <AdminCustomer /> },
           { path: "reports", element: <AdminReports /> },
           { path: "products/new", element: <ProductCreatePage /> },
+          { path: "products/edit/:id", element: <ProductEditPage /> },
         ],
       },
     ],
