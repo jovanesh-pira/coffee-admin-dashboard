@@ -70,7 +70,7 @@ export async function registerService(username:string,email:string,password:stri
      try{
       let user_snap=await createUserWithEmailAndPassword(auth(),email,password)
       let ref=doc(db(),"users",user_snap.user.uid)
-      let snap_doc=await setDoc(ref,{
+      await setDoc(ref,{
           uid: user_snap.user.uid,
           email:email,
           displayName:username,
