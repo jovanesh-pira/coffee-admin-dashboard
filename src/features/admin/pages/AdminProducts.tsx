@@ -1,6 +1,8 @@
 import { useState } from "react"
 import { Link } from "react-router-dom"
 import useProducts from "@/features/products/hooks/useProducts"
+import { usePagination } from "@/shared/hooks/usePagination"
+import { Pagination } from "@/shared/ui/Pagination"
 import {
   deleteProductService,
   toggleAvailabilityService,
@@ -13,6 +15,7 @@ type ConfirmTarget = { id: string; name: string; imageUrl?: string | null }
 
 export function AdminProducts() {
   const { products, loading, error, refetch } = useProducts()
+  const { visible, page, totalPages, goTo, hasPrev, hasNext } = usePagination(products, 5)
   const [deleting, setDeleting]= useState<string | null>(null)
   const [toggling, setToggling]= useState<string | null>(null)
   const [confirmTarget, setConfirmTarget] = useState<ConfirmTarget | null>(null)
@@ -70,7 +73,7 @@ export function AdminProducts() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#F0EAE3]">
-              {products.map((product, index) => {
+              {visible.map((product, index) => {
                 const { d, discounted } = calcDiscounted(product.price, product.discountPercent)
                 const hasDiscount = d > 0
 
@@ -187,6 +190,8 @@ export function AdminProducts() {
           </div>
         </div>
       )}
+
+      <Pagination page={page} totalPages={totalPages} hasPrev={hasPrev} hasNext={hasNext} goTo={goTo} />
     </div>
   )
 }

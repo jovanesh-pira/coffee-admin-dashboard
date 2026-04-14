@@ -2,6 +2,8 @@ import { useEffect, useState } from "react"
 import { collection, getDocs, Timestamp } from "firebase/firestore"
 import { db } from "@/app/firebase/firebase"
 import { FiMapPin, FiPhone, FiUser } from "react-icons/fi"
+import { usePagination } from "@/shared/hooks/usePagination"
+import { Pagination } from "@/shared/ui/Pagination"
 
 type Customer = {
   id: string
@@ -44,6 +46,7 @@ function AdminCustomer() {
     c.phone?.includes(search) ||
     c.city?.toLowerCase().includes(search.toLowerCase())
   )
+  const { visible, page, totalPages, goTo, hasPrev, hasNext } = usePagination(filtered, 10)
 
   if (error) return <p className="text-red-500 text-sm">{error}</p>
   if (loading) return <p className="text-[#9A948D] text-sm">Loading customers...</p>
@@ -94,7 +97,7 @@ function AdminCustomer() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#F0EAE3]">
-                {filtered.map((customer, index) => (
+                {visible.map((customer, index) => (
                   <tr key={customer.id} className="hover:bg-[#FDFAF7] transition">
 
                     {/* # */}
@@ -148,7 +151,7 @@ function AdminCustomer() {
 
           {/* Mobile cards */}
           <div className="md:hidden flex flex-col gap-3">
-            {filtered.map((customer, index) => (
+            {visible.map((customer, index) => (
               <div
                 key={customer.id}
                 className="rounded-2xl border border-[#E7DFD4] bg-white p-4 flex flex-col gap-3"
@@ -188,6 +191,8 @@ function AdminCustomer() {
           </div>
         </>
       )}
+
+      <Pagination page={page} totalPages={totalPages} hasPrev={hasPrev} hasNext={hasNext} goTo={goTo} />
     </div>
   )
 }

@@ -2,6 +2,8 @@ import { useEffect, useState } from "react"
 import { markOrdersAsSeen } from "../hooks/useNewOrdersCount"
 import { useOrders, updateOrderStatus, type OrderStatus } from "../hooks/useOrders"
 import { formatPrice } from "@/features/products/services/products.service"
+import { usePagination } from "@/shared/hooks/usePagination"
+import { Pagination } from "@/shared/ui/Pagination"
 
 const STATUS_STYLES: Record<OrderStatus, string> = {
   pending:   "bg-amber-100 text-amber-700 border border-amber-300",
@@ -19,6 +21,7 @@ export function AdminOrders() {
   useEffect(() => { markOrdersAsSeen() }, [])
 
   const filtered = filter === "all" ? orders : orders.filter(o => o.status === filter)
+  const { visible, page, totalPages, goTo, hasPrev, hasNext } = usePagination(filtered, 10)
 
   async function handleStatus(orderId: string, status: OrderStatus) {
     setUpdating(orderId)
@@ -85,7 +88,7 @@ export function AdminOrders() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#F0EAE3]">
-              {filtered.map(order => (
+              {visible.map(order => (
                 <tr key={order.id} className="hover:bg-[#FDFAF7] transition">
 
                   {/* Order ID */}
@@ -164,6 +167,8 @@ export function AdminOrders() {
           </table>
         </div>
       )}
+
+      <Pagination page={page} totalPages={totalPages} hasPrev={hasPrev} hasNext={hasNext} goTo={goTo} />
     </div>
   )
 }
